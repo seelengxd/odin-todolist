@@ -85,3 +85,15 @@ form {
   justify-content: space-between;
   gap: 10px;
 }
+
+.high {
+  background-color: red;
+}
+
+.med {
+  background-color: lightyellow;
+}
+
+.low {
+  background-color: lightgreen;
+}
