@@ -37,7 +37,7 @@ const DOMStuff = (function(){
   const todoList = document.querySelector('#todos')
   const addFormButton = document.querySelector("#addformbutton")
   addFormButton.onclick = renderAddForm;
-  
+
   function makeInput(label, type, name, options){
     const field = document.createElement('div');
     field.classList.add('field')
@@ -49,6 +49,7 @@ const DOMStuff = (function(){
       input.name = name
     } else if (type == 'select'){
       input = document.createElement('select')
+      input.name = name
       for (const opt of options){
         const option = document.createElement('option');
         option.value = opt;
@@ -86,6 +87,10 @@ const DOMStuff = (function(){
     submit.value = 'Add Todo';
     form.append(close, h2, title, description, dueDate, priority, submit);
     view.append(form);
+    form.onsubmit = e => {
+      e.preventDefault();
+      MainHandler.addTodo();
+    }
     return view;
     
   })();
@@ -134,7 +139,23 @@ const DOMStuff = (function(){
 
   }
 
-  return {clearElement, clearTodo, addTodo, renderAddForm}
+  function extractAddForm() {
+    const title = document.querySelector("[name='title']").value;
+    const description = document.querySelector("[name='description']").value;
+    const dueDate = document.querySelector("[name='dueDate']").value;
+    const priority = document.querySelector("[name='priority']").value;
+    return {title, description, dueDate, priority}
+  }
+
+  function clearAddForm(){
+    document.querySelector("[name='title']").value = '';
+    document.querySelector("[name='description']").value = '';
+    document.querySelector("[name='dueDate']").value = '';
+    document.querySelector("[name='priority']").value = 'low';
+
+  }
+
+  return { clearElement, clearTodo, addTodo, extractAddForm, clearAddForm}
 })()
 
 const MainHandler = (function(){
@@ -142,12 +163,12 @@ const MainHandler = (function(){
   const projects = [defaultProject];
   let currentProject = defaultProject;
 
-  function addTodo(title, description, dueDate, priority){
+  function addTodo(){
+    ({title, description, dueDate, priority} = DOMStuff.extractAddForm());
     [index, newTodo] = currentProject.addTodo(title, description, dueDate, priority);
     DOMStuff.addTodo(newTodo, index);
+    DOMStuff.clearAddForm();
   }
 
   return { addTodo };
 })();
-
-DOMStuff.renderAddForm();
