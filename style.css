@@ -72,6 +72,11 @@ input[type="checkbox"]{
   background-color: lightcoral;
   color: white;
   border-color: grey;
+  width: 40px
+}
+
+#close:hover {
+  background-color: red;
 }
 
 form {
