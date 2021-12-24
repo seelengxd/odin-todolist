@@ -1,7 +1,7 @@
 import { format } from 'date-fns'; 
 
 class Todo{
-  constructor(title, description, dueDate, priority){
+  constructor(title, description, dueDate, priority, done=false){
     this.title = title;
     this.description = description;
     if (typeof dueDate == 'string'){
@@ -19,7 +19,7 @@ class Todo{
     }
     this.dueDate = dueDate;
     this.priority = priority;
-    this.done = false;
+    this.done = done;
   }
 
   edit(title, description, dueDate, priority){
@@ -46,7 +46,7 @@ class Project{
     this.nextIndex = nextIndex;
     for (const key in store){
       let todoData = store[key];
-      store[key] = new Todo(todoData.title, todoData.description, todoData.dueDate, todoData.priority);
+      store[key] = new Todo(todoData.title, todoData.description, todoData.dueDate, todoData.priority, todoData.done);
     }
   }
 
