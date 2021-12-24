@@ -5,9 +5,16 @@ class Todo{
     this.title = title;
     this.description = description;
     if (typeof dueDate == 'string'){
-      let [year, month, day] = dueDate.split('-');
-      month--;
-      dueDate = new Date(year, month, day);
+      if (dueDate.length > 10){
+        dueDate = new Date(dueDate);
+      }
+      else{
+        let [year, month, day] = dueDate.split('-');
+        month--;
+        dueDate = new Date(year, month, day);
+        console.log(dueDate);
+      }
+      
 
     }
     this.dueDate = dueDate;
@@ -33,10 +40,14 @@ class Todo{
 }
 
 class Project{
-  constructor(name){
+  constructor(name, store={}, nextIndex=0){
     this.name = name;
-    this.store = {};
-    this.nextIndex = 0;
+    this.store = store;
+    this.nextIndex = nextIndex;
+    for (const key in store){
+      let todoData = store[key];
+      store[key] = new Todo(todoData.title, todoData.description, todoData.dueDate, todoData.priority);
+    }
   }
 
   addTodo(title, description, dueDate, priority){
@@ -76,11 +87,13 @@ const DOMStuff = (function(){
   addProjectButton.onclick = () => MainHandler.addProject();
 
   const addHandler = e => {
+    e.preventDefault();
     MainHandler.addTodo();
-    hideForm(e);
+    hideForm(e);   
   };
 
   const editHandler = (todo, todoDOM, id) => e => {
+    e.preventDefault();
     MainHandler.editTodo(todo, todoDOM, id);
     hideForm(e);
   }
@@ -216,7 +229,6 @@ const DOMStuff = (function(){
   }
 
   function hideForm(e){
-    if (e) e.preventDefault();
     view.main.remove();
 
   }
@@ -259,8 +271,26 @@ const DOMStuff = (function(){
   return { clearElement, clearTodos, addTodo, extractForm, clearForm, deleteTodo, editTodo, hideForm, doneTodo, addProject }
 })();
 
+const Storage = (function(){
+  function save(projects){
+    localStorage.data = JSON.stringify(projects);
+  }
+
+  function load(){
+    if (localStorage.data){
+      return JSON.parse(localStorage.data).map(project => 
+        new Project(project.name, project.store, project.nextIndex)
+      );
+    } else {
+      return [];
+    }
+  }
+  
+  return {save, load};
+})();
+
 const MainHandler = (function(){
-  const projects = [];
+  let projects = [];
   let currentProject = null;
 
   const deleteCallback = domTodo => e => {
@@ -274,19 +304,22 @@ const MainHandler = (function(){
     
     DOMStuff.addTodo(newTodo, index, deleteCallback);
     DOMStuff.clearForm();
+    Storage.save(projects);
   }
 
   function deleteTodo(todoDOM){
     const id = todoDOM.dataset.id;
     DOMStuff.deleteTodo(todoDOM);
     currentProject.removeTodo(id);
+    Storage.save(projects);
 
   }
 
   function editTodo(todo, todoDOM, id){
     const { title, description, dueDate, priority } = DOMStuff.extractForm();
     if (currentProject.editTodo(id, title, description, dueDate, priority)){
-      DOMStuff.editTodo(todo, todoDOM)
+      DOMStuff.editTodo(todo, todoDOM);
+      Storage.save(projects);
     }
     
   }
@@ -295,6 +328,7 @@ const MainHandler = (function(){
     const id = todoDOM.dataset.id;
     if (currentProject.doneTodo(id)){
       DOMStuff.doneTodo(todoDOM);
+      Storage.save(projects);
     }
   }
 
@@ -306,14 +340,21 @@ const MainHandler = (function(){
     }
   }
 
-  function addProject(){
-    const project = new Project(`project ${projects.length + 1}`);
+  function addProject(project=null){
+    if (!project){
+      project = new Project(`project ${projects.length + 1}`);
+    }
     projects.push(project);
     switchProject(project);
     DOMStuff.addProject(project);
+    Storage.save(projects);
   }
 
-  addProject();
+  projects = Storage.load();
+  console.log(projects);
+  projects.forEach(project => DOMStuff.addProject(project));
+  if (projects.length == 0) addProject();
+  switchProject(projects[0]);
 
   return { addTodo, editTodo, doneTodo, switchProject, addProject };
 })();
