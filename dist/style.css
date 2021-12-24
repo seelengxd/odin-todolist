@@ -107,3 +107,8 @@ form {
   display: flex;
   gap: 10px;
 }
+
+.done {
+  opacity: 0.4;
+  text-decoration: line-through
+}
