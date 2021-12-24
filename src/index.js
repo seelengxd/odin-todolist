@@ -1,3 +1,6 @@
+// import { format } from 'date-fns'; 
+// console.log(format(new Date(2021, 11, 24), 'dd MMM yyyy'));
+
 class Todo{
   constructor(title, description, dueDate, priority){
     this.title = title;
@@ -12,7 +15,6 @@ class Todo{
     if (description) this.description = description;
     if (dueDate) this.dueDate = dueDate;
     if (priority) this.priority = priority;
-  
   }
 
   do(){
@@ -116,12 +118,21 @@ const DOMStuff = (function(){
     const task = document.createElement('div')
     task.dataset.id = id;
     task.classList.add('todo');
-    const p = document.createElement('div');
+    const h3 = document.createElement('h3');
     console.log(todo);
-    p.textContent = todo.title;
+    h3.textContent = todo.title;
+
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
-    task.append(p, checkbox);
+    
+    const date = document.createElement('p');
+    date.textContent = todo.dueDate;
+    
+
+    const left = document.createElement('div');
+    left.classList.add('left');
+    left.append(h3, date);
+    task.append(left, checkbox);
     task.classList.add(todo.priority);
     todoList.append(task);
   }
@@ -150,7 +161,8 @@ const DOMStuff = (function(){
     const description = document.querySelector("[name='description']").value;
     const dueDate = document.querySelector("[name='dueDate']").value;
     const priority = document.querySelector("[name='priority']").value;
-    return {title, description, dueDate, priority}
+    // return {title, description, dueDate, priority};
+    return {title, description, dueDate, priority};
   }
 
   function clearAddForm(){
@@ -162,7 +174,7 @@ const DOMStuff = (function(){
   }
 
   return { clearElement, clearTodo, addTodo, extractAddForm, clearAddForm}
-})()
+})();
 
 const MainHandler = (function(){
   const defaultProject = new Project('default');
@@ -170,9 +182,11 @@ const MainHandler = (function(){
   let currentProject = defaultProject;
 
   function addTodo(){
-    ({title, description, dueDate, priority} = DOMStuff.extractAddForm());
+    console.log(DOMStuff.extractAddForm());
+    const { title, description, dueDate, priority } = DOMStuff.extractAddForm();
     [index, newTodo] = currentProject.addTodo(title, description, dueDate, priority);
     DOMStuff.addTodo(newTodo, index);
+    DOMStuff.addTodo(indexAndTodo[1], indexAndTodo[0]);
     DOMStuff.clearAddForm();
   }
 
