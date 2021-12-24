@@ -1,10 +1,16 @@
-// import { format } from 'date-fns'; 
+import { format } from 'date-fns'; 
 // console.log(format(new Date(2021, 11, 24), 'dd MMM yyyy'));
 
 class Todo{
   constructor(title, description, dueDate, priority){
     this.title = title;
     this.description = description;
+    if (typeof dueDate == 'string'){
+      let [year, month, day] = dueDate.split('-');
+      month--;
+      dueDate = new Date(year, month, day);
+
+    }
     this.dueDate = dueDate;
     this.priority = priority;
     this.done = false;
@@ -36,6 +42,11 @@ class Project{
     this.store[this.nextIndex] = todo
     this.nextIndex++;
     return [this.nextIndex - 1, todo]
+  }
+
+  removeTodo(id){
+    delete this.store[id];
+    console.log(this.store);
   }
 }
 
@@ -69,6 +80,7 @@ const DOMStuff = (function(){
       input.name = name;
       input.type = type;
     }
+    input.required = true;
     field.append(fieldLabel, input);
     return field;
 
@@ -114,7 +126,7 @@ const DOMStuff = (function(){
     clearElement(todoList);
   }
 
-  function addTodo(todo, id){
+  function addTodo(todo, id, deleteCallback){
     const task = document.createElement('div')
     task.dataset.id = id;
     task.classList.add('todo');
@@ -126,15 +138,22 @@ const DOMStuff = (function(){
     checkbox.type = 'checkbox';
     
     const date = document.createElement('p');
-    date.textContent = todo.dueDate;
+    date.textContent = format(todo.dueDate, 'dd MMM yyyy');
     
 
     const left = document.createElement('div');
+    const right = document.createElement('div');
+    const deleteButton = document.createElement('button');
+    deleteButton.textContent = 'delete';
+    deleteButton.onclick = deleteCallback(task);
     left.classList.add('left');
     left.append(h3, date);
-    task.append(left, checkbox);
+    right.append(checkbox, deleteButton);
+    right.classList.add('right');
+    task.append(left, right);
     task.classList.add(todo.priority);
     todoList.append(task);
+    return task;
   }
 
   function viewTodo(todo){
@@ -161,7 +180,6 @@ const DOMStuff = (function(){
     const description = document.querySelector("[name='description']").value;
     const dueDate = document.querySelector("[name='dueDate']").value;
     const priority = document.querySelector("[name='priority']").value;
-    // return {title, description, dueDate, priority};
     return {title, description, dueDate, priority};
   }
 
@@ -184,10 +202,20 @@ const MainHandler = (function(){
   function addTodo(){
     console.log(DOMStuff.extractAddForm());
     const { title, description, dueDate, priority } = DOMStuff.extractAddForm();
-    [index, newTodo] = currentProject.addTodo(title, description, dueDate, priority);
-    DOMStuff.addTodo(newTodo, index);
-    DOMStuff.addTodo(indexAndTodo[1], indexAndTodo[0]);
+    const [index, newTodo] = currentProject.addTodo(title, description, dueDate, priority);
+    const deleteCallback = domTodo => e => {
+      e.preventDefault();
+      deleteTodo(domTodo);
+    }
+    DOMStuff.addTodo(newTodo, index, deleteCallback);
     DOMStuff.clearAddForm();
+  }
+
+  function deleteTodo(todoDOM){
+    const id = todoDOM.dataset.id;
+    todoDOM.remove();
+    currentProject.removeTodo(id);
+
   }
 
   return { addTodo };
