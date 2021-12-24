@@ -61,6 +61,14 @@ class Project{
     }
     return false;
   }
+
+  doneTodo(id){
+    if (id in this.store){
+      this.store[id].do();
+      return true;
+    }
+    return false;
+  }
 }
 
 const DOMStuff = (function(){
@@ -152,6 +160,11 @@ const DOMStuff = (function(){
 
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
+    if (todo.done){
+      checkbox.checked = true;
+      task.classList.add('done');
+    }
+    checkbox.onchange = () => MainHandler.doneTodo(task);
     
     const date = document.createElement('p');
     date.textContent = format(todo.dueDate, 'dd MMM yyyy');
@@ -184,7 +197,6 @@ const DOMStuff = (function(){
     view.priority.querySelector('select').value = todo.priority;
     view.submit.value = 'Edit todo'
     view.form.onsubmit = editHandler(todo, todoDOM, id);
-    console.log(view.onsubmit);
     document.querySelector('body').append(view.main);
 
   }
@@ -200,6 +212,7 @@ const DOMStuff = (function(){
     view.description.querySelector('textarea').value = '';
     view.dueDate.querySelector('input').value = '';
     view.priority.querySelector('select').value = '';
+    view.form.onsubmit = addHandler;
     document.querySelector('body').append(view.main);
 
   }
@@ -234,7 +247,11 @@ const DOMStuff = (function(){
 
   }
 
-  return { clearElement, clearTodos, addTodo, extractForm, clearForm, deleteTodo, editTodo, hideForm }
+  function doneTodo(todoDOM){
+    todoDOM.classList.toggle('done');
+  }
+
+  return { clearElement, clearTodos, addTodo, extractForm, clearForm, deleteTodo, editTodo, hideForm, doneTodo }
 })();
 
 const MainHandler = (function(){
@@ -268,5 +285,13 @@ const MainHandler = (function(){
     
   }
 
-  return { addTodo, editTodo };
+  function doneTodo(todoDOM){
+    console.log('run');
+    const id = todoDOM.dataset.id;
+    if (currentProject.doneTodo(id)){
+      DOMStuff.doneTodo(todoDOM);
+    }
+  }
+
+  return { addTodo, editTodo, doneTodo };
 })();
