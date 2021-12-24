@@ -102,3 +102,8 @@ form {
 .low {
   background-color: lightgreen;
 }
+
+.right{
+  display: flex;
+  gap: 10px;
+}
