@@ -21,6 +21,9 @@ aside {
   background-color: gold;
   flex: 1 0 30%;
   padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 #main{
@@ -111,4 +114,14 @@ form {
 .done {
   opacity: 0.4;
   text-decoration: line-through
+}
+
+#boards div{
+  padding: 5px;
+  transition-duration: 0.5;
+}
+
+#boards div:hover{
+  background-color:coral;
+  cursor: pointer;
 }
