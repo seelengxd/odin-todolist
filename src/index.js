@@ -1,5 +1,4 @@
 import { format } from 'date-fns'; 
-// console.log(format(new Date(2021, 11, 24), 'yyyy-MM-dd'));
 
 class Todo{
   constructor(title, description, dueDate, priority){
@@ -41,9 +40,7 @@ class Project{
   }
 
   addTodo(title, description, dueDate, priority){
-    console.log({title, description, dueDate, priority})
     const todo = new Todo(title, description, dueDate, priority);
-    console.log(todo);
     this.store[this.nextIndex] = todo
     this.nextIndex++;
     return [this.nextIndex - 1, todo]
@@ -51,7 +48,6 @@ class Project{
 
   removeTodo(id){
     delete this.store[id];
-    console.log(this.store);
   }
 
   editTodo(id, title, description, dueDate, priority){
@@ -72,10 +68,13 @@ class Project{
 }
 
 const DOMStuff = (function(){
-  const boardList = document.querySelector("aside")
-  const todoList = document.querySelector('#todos')
-  const addFormButton = document.querySelector("#addformbutton")
+  const boardList = document.querySelector("aside");
+  const todoList = document.querySelector('#todos');
+  const addFormButton = document.querySelector("#addformbutton");
   addFormButton.onclick = renderAddForm;
+  const addProjectButton = document.querySelector("#addprojectbutton");
+  addProjectButton.onclick = () => MainHandler.addProject();
+
   const addHandler = e => {
     MainHandler.addTodo();
     hideForm(e);
@@ -147,7 +146,7 @@ const DOMStuff = (function(){
     }
   }
   function clearTodos(){
-    clearElement(todoList);
+    document.querySelectorAll("#todos div").forEach(ele => ele.remove());
   }
 
   function addTodo(todo, id, deleteCallback){
@@ -155,7 +154,6 @@ const DOMStuff = (function(){
     task.dataset.id = id;
     task.classList.add('todo');
     const h3 = document.createElement('h3');
-    console.log(todo);
     h3.textContent = todo.title;
 
     const checkbox = document.createElement('input');
@@ -251,21 +249,29 @@ const DOMStuff = (function(){
     todoDOM.classList.toggle('done');
   }
 
-  return { clearElement, clearTodos, addTodo, extractForm, clearForm, deleteTodo, editTodo, hideForm, doneTodo }
+  function addProject(project){
+    const projectDOM = document.createElement('div');
+    projectDOM.textContent = project.name;
+    projectDOM.onclick = () => MainHandler.switchProject(project);
+    boardList.appendChild(projectDOM);
+  }
+
+  return { clearElement, clearTodos, addTodo, extractForm, clearForm, deleteTodo, editTodo, hideForm, doneTodo, addProject }
 })();
 
 const MainHandler = (function(){
-  const defaultProject = new Project('default');
-  const projects = [defaultProject];
-  let currentProject = defaultProject;
+  const projects = [];
+  let currentProject = null;
+
+  const deleteCallback = domTodo => e => {
+    e.preventDefault();
+    deleteTodo(domTodo);
+  }
 
   function addTodo(){
     const { title, description, dueDate, priority } = DOMStuff.extractForm();
     const [ index, newTodo ] = currentProject.addTodo(title, description, dueDate, priority);
-    const deleteCallback = domTodo => e => {
-      e.preventDefault();
-      deleteTodo(domTodo);
-    }
+    
     DOMStuff.addTodo(newTodo, index, deleteCallback);
     DOMStuff.clearForm();
   }
@@ -286,12 +292,28 @@ const MainHandler = (function(){
   }
 
   function doneTodo(todoDOM){
-    console.log('run');
     const id = todoDOM.dataset.id;
     if (currentProject.doneTodo(id)){
       DOMStuff.doneTodo(todoDOM);
     }
   }
 
-  return { addTodo, editTodo, doneTodo };
+  function switchProject(project){
+    currentProject = project;
+    DOMStuff.clearTodos();
+    for (const id in project.store){
+      DOMStuff.addTodo(project.store[id], id, deleteCallback);
+    }
+  }
+
+  function addProject(){
+    const project = new Project(`project ${projects.length + 1}`);
+    projects.push(project);
+    switchProject(project);
+    DOMStuff.addProject(project);
+  }
+
+  addProject();
+
+  return { addTodo, editTodo, doneTodo, switchProject, addProject };
 })();
